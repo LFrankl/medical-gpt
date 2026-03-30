@@ -269,3 +269,91 @@
 ---
 
 **注意**：以上模板仅供参考，请根据实际项目经历进行调整，确保内容真实可靠。
+
+---
+
+# MedicalGPT 项目简历模板（第二批：微调 & RL 方向，共 5 个版本）
+
+以下 5 个版本聚焦 **SFT 微调、DPO/PPO/GRPO 强化学习对齐**方向，风格参照互联网大厂实习生/校招简历：紧凑高密度、业务背景加粗、数字指标内嵌行文、`1. 2. 3.` 分点陈述。
+
+---
+
+## 版本 6：SFT 微调工程师 — 侧重数据工程 + LoRA 调参
+
+**医疗大模型 SFT 微调与数据工程** | MedicalGPT &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 2024.06 - 2024.12
+
+**业务背景**：通用 LLM 在医疗问答场景存在专业术语理解偏差、安全边界模糊等问题，需基于领域数据进行 SFT 微调，构建可用于生产的医疗垂直模型。
+
+1. **数据工程与质量治理**：收集整理 ShareGPT 格式医疗问答数据，开发 `validate_jsonl.py` 实现格式校验与字段完整性检查，设计 4 维度数据清洗方案（去重、长度过滤、质量评分、领域相关性），将原始数据噪声率从 23% 降至 4.1%，有效训练样本量提升 38%。
+
+2. **QLoRA 微调方案设计**：基于 Qwen2.5-7B-Instruct，采用 QLoRA + 4bit 量化 + Gradient Checkpointing 方案，在双 4090（48GB 显存）上实现 7B 模型微调；调优 `lora_rank=16`、`lora_alpha=32`、`learning_rate=2e-5`、`gradient_accumulation_steps=16` 等关键参数，显存占用控制在 22GB 以内，训练吞吐提升 80%。
+
+3. **训练效果评估与迭代**：构建包含 500 条标准样本的医疗评测集（覆盖诊断、用药、预防 8 个子领域），实现 base/sft 双模型批量对比工具；经 3 轮数据迭代，模型在医疗问答准确率从 62% 提升至 83%，幻觉率降低 41%，平均回答专业度评分从 3.1 提升至 4.2（5 分制）。
+
+---
+
+## 版本 7：DPO 偏好对齐工程师 — 侧重 RLHF 链路与偏好数据
+
+**大模型 DPO 偏好对齐训练** | MedicalGPT &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 2024.06 - 2024.12
+
+**业务背景**：SFT 模型存在过度自信、答非所问、安全边界不清晰等问题，需引入人类偏好对齐，使模型输出更符合医疗场景的安全性与专业性要求。
+
+1. **偏好数据标注体系建设**：设计医疗场景 chosen/rejected 偏好对标注规范，明确 5 类拒绝标准（虚假诊断、药物剂量错误、无风险提示、过度拒答、格式混乱）；采用"专家标注 + GPT 辅助筛选"混合策略构建 3000 条高质量偏好对数据集，标注一致性 Kappa 系数达 0.83，标注成本相比纯人工降低 60%。
+
+2. **DPO 训练流程实现**：基于 `trl` 库实现 DPO loss 计算与训练流程，以 merged SFT 模型为基座进行二阶段训练；调优 `beta=0.1`、`learning_rate=5e-5`、`max_steps=1000` 等参数，引入自适应 beta 调整策略解决训练 loss 震荡问题，loss 方差降低 65%，收敛速度提升 25%。
+
+3. **对齐效果量化评估**：构建安全性、准确性、流畅度三维评测体系，对比 base/sft/dpo 三阶段模型；DPO 对齐后模型安全拒答率从 15% 提升至 92%，专业准确度提升 28%，chosen reward margin 稳定在 0.6 以上，用户满意度从 3.2 提升至 4.1（5 分制）。
+
+---
+
+## 版本 8：RL 强化学习方向 — 侧重 PPO/GRPO 对比实验
+
+**大模型强化学习对齐算法研究与实现** | MedicalGPT &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 2024.06 - 2024.12
+
+**业务背景**：医疗场景对模型安全性与可控性要求极高，需系统评估 DPO、PPO、GRPO 等多种 RL 对齐算法，选择最适合垂直领域的训练范式并落地。
+
+1. **多算法对比实验框架**：实现 DPO、PPO、GRPO、ORPO 四种对齐算法，设计统一评测框架（安全性、准确性、训练稳定性、资源消耗四维度）；在相同 3000 条偏好数据集上进行控制变量实验，记录各算法收敛曲线、reward margin 变化、GPU 显存占用，最终确定 DPO 在医疗场景综合表现最优。
+
+2. **PPO 训练链路搭建**：基于 `trl` 的 `PPOTrainer` 实现完整 RM + PPO 训练链路，训练 Reward Model（RM）对 chosen/rejected 对进行打分；调优 PPO `clip_range=0.2`、`kl_coef=0.1`、`vf_coef=0.1` 等超参，解决 reward hacking 和 KL 散度过大问题，RM 在验证集上 accuracy 达 81.3%。
+
+3. **GRPO 轻量化实验**：复现 GRPO（Group Relative Policy Optimization）算法，去除 Critic 网络，通过组内相对奖励替代绝对奖励信号，显存占用相比 PPO 降低 42%；在医疗推理任务上，GRPO 模型 CoT 推理准确率达 79.4%，相比 DPO 提升 6.2pp，训练成本仅为 PPO 的 1/3。
+
+---
+
+## 版本 9：LLaMA-Factory 实践方向 — 侧重训练框架工程化
+
+**基于 LLaMA-Factory 的大模型微调工程化平台** | MedicalGPT &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 2024.06 - 2024.12
+
+**业务背景**：医疗大模型训练涉及 SFT/DPO/PPO 多种范式，手工管理训练脚本效率低、复现性差，需构建标准化训练工程平台，支持快速实验迭代。
+
+1. **训练框架选型与集成**：调研对比 LLaMA-Factory、Axolotl、OpenRLHF 等主流训练框架，基于 LLaMA-Factory 构建统一训练入口；封装 SFT、DPO、PPO、GRPO 四种训练范式的标准化启动脚本，支持 LoRA/QLoRA/全参数三种微调模式，实验配置通过 YAML 管理，实验复现率从 40% 提升至 95%。
+
+2. **多卡分布式训练优化**：基于 `torchrun` + DDP 实现双 4090 数据并行训练，集成 DeepSpeed ZeRO-2 优化器状态分片；针对 DDP 训练中 `ddp_find_unused_parameters` 导致的梯度同步问题进行排查修复，训练吞吐从 120 samples/s 提升至 380 samples/s（3.2×），GPU 利用率从 65% 提升至 92%。
+
+3. **实验管理与模型版本控制**：开发训练监控看板（TensorBoard + 自定义脚本），实时追踪 train loss、eval loss、reward margin 等指标；实现 checkpoint 自动管理（`save_total_limit=5`）、LoRA merge 工具链、模型量化（INT8/INT4）流水线；完成 15 轮模型迭代，实验迭代周期从 3 天缩短至 1 天，模型准确率从 62% 提升至 89%。
+
+---
+
+## 版本 10：端到端 RL 对齐 — 侧重 Reward Model + RLHF 完整链路
+
+**医疗大模型 RLHF 完整链路实现** | MedicalGPT &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 2024.06 - 2024.12
+
+**业务背景**：医疗问答场景需要模型具备精准的安全边界判断能力，单纯 SFT 无法满足要求，需实现 RM 训练 + PPO 强化学习的完整 RLHF 链路，并与 DPO 方案进行系统对比。
+
+1. **Reward Model 训练**：基于 SFT 模型构建 Reward Model，在 3000 条 chosen/rejected 偏好对上进行二分类训练；设计多维度奖励信号（安全性 0.4、准确性 0.4、流畅度 0.2 加权），采用 Bradley-Terry 模型建模人类偏好；RM 在验证集上 pairwise accuracy 达 81.3%，相比 GPT-4 打分一致性达 78%。
+
+2. **PPO 强化学习训练**：基于 `trl` PPOTrainer 实现完整 Actor-Critic 训练框架，以 SFT 模型为 Actor 初始化，冻结 RM 作为奖励信号；调优 KL 惩罚系数（`kl_coef=0.1`）防止 reward hacking，引入 value function clipping 提升训练稳定性；PPO 训练后模型安全拒答率从 15% 提升至 89%，相比 DPO 高 3pp，但训练成本为 DPO 的 3.1 倍。
+
+3. **DPO vs PPO 系统对比与落地决策**：在相同数据集和评测标准下对比 DPO 与 PPO 全链路效果；DPO 在安全性（92% vs 89%）、训练成本（1× vs 3.1×）、工程复杂度（1个阶段 vs 3个阶段）上综合占优；最终选择 DPO 作为生产方案，PPO 链路作为高安全场景备选；落地后模型在 SEA 市场上线，人工标注成本降低 70.7%，日均处理问诊量 2 万+。
+
+---
+
+## 第二批版本选用建议
+
+| 版本 | 目标岗位 | 核心关键词 |
+|------|---------|-----------|
+| 版本 6 | 算法工程师（数据 + 微调） | QLoRA、数据清洗、LoRA 调参、评测 |
+| 版本 7 | 对齐算法工程师 | DPO、偏好数据、RLHF、reward margin |
+| 版本 8 | RL 算法研究员 | PPO、GRPO、ORPO、对比实验 |
+| 版本 9 | 训练框架工程师 | LLaMA-Factory、分布式训练、工程化 |
+| 版本 10 | RLHF 全链路工程师 | Reward Model、PPO、Actor-Critic、落地 |
